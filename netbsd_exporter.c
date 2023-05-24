@@ -196,6 +196,7 @@ int main() {
         for (i = 0; i < ndrive; i++) {
             print_disk_io_metric(drives[i].name, drives[i].rbytes, drives[i].wbytes);
         }
+        free(drives);
     }
 
     closelog();
