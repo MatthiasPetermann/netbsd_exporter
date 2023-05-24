@@ -24,7 +24,8 @@
  * SUCH DAMAGE.
  */
 
-/* This program retrieves system metrics such as disk I/O, network I/O,
+/* 
+ * This program retrieves system metrics such as disk I/O, network I/O,
  * RAM and filesystem usage, as well as CPU load from the running system
  * and exposes them in the format of Prometheus metrics. It is designed
  * to be integrated into inetd, providing a lightweight, NetBSD-focused
@@ -48,10 +49,6 @@
 #include <syslog.h>
 #include <unistd.h>
 #include <uvm/uvm_extern.h>
-
-/* sysctl hw.drivestats buffer. */
-static struct io_sysctl *drives = NULL;
-
 
 void print_filesystem_metric(const char* metric, const char* device, const char* mountpoint, long value) {
     printf("os_filesystem_%s_bytes{device=\"%s\",mountpoint=\"%s\"} %ld\n", metric, device, mountpoint, value);
@@ -77,15 +74,17 @@ void print_memory_metric(const char* metric, long value) {
 }
 
 int main() {
+    int mib[3];
+    size_t size;
+    int i;
+
+
     openlog("netbsd_exporter", LOG_PID, LOG_USER);
     syslog(LOG_INFO, "Das Programm wurde aufgerufen.");
 
     printf("HTTP/1.1 200 OK\r\n");
     printf("Content-Type: text/plain\r\n\r\n");
 
-    int mib[3];
-    size_t size;
-    int i;
 
     // Disk Space Metrics
     struct statvfs* fsinfo;
@@ -166,38 +165,46 @@ int main() {
     print_memory_metric("swap_size", u.swpages * pagesize);
     print_memory_metric("swap_used", u.swpginuse * pagesize);
 
-    // Disk IO
-    int ndrive;
+    /*
+     * Call sysctl to determine the size of the expected structure and
+     * allocate a suitable sized buffer.
+     */
     mib[0] = CTL_HW;
     mib[1] = HW_IOSTATS;
     mib[2] = sizeof(struct io_sysctl);
     if (sysctl(mib,3 , NULL, &size, NULL, 0) == -1) {
-        syslog(LOG_ERR, "No drives found"); 
+        syslog(LOG_ERR, "Sysctl HW_IOSTATS failed."); 
         return 1;	
     }
-
-    ndrive = size / sizeof(struct io_stats);
-    if (size == 0) {
-        syslog(LOG_ERR, "No drives attached.");
-    } else {
-        drives = (struct io_sysctl *)malloc(size);
-        if (drives == NULL) {
-            syslog(LOG_ERR,"Memory allocation failure.");
-        }
-
-        /* Read the drive names and set initial selection. */
-        mib[0] = CTL_HW;                /* Should be still set from */
-        mib[1] = HW_IOSTATS;            /* ... above, but be safe... */
-        mib[2] = sizeof(struct io_sysctl);
-        if (sysctl(mib, 3, drives, &size, NULL, 0) == -1) {
-            syslog(LOG_ERR, "sysctl hw.iostats failed");
-        }
-        ndrive = size / sizeof(struct io_sysctl);
-        for (i = 0; i < ndrive; i++) {
-            print_disk_io_metric(drives[i].name, drives[i].rbytes, drives[i].wbytes);
-        }
-        free(drives);
+    struct io_sysctl *disks = NULL;
+    disks = (struct io_sysctl *)malloc(size);
+    if (disks == NULL) {
+        syslog(LOG_ERR,"Memory allocation failure.");
+        exit(1);
     }
+
+    /*
+     * Call sysctl once again, this time with the buffer to fetch the
+     * actual iostats data.
+     */
+    mib[0] = CTL_HW;
+    mib[1] = HW_IOSTATS;
+    mib[2] = sizeof(struct io_sysctl);
+    if (sysctl(mib, 3, disks, &size, NULL, 0) == -1) {
+        syslog(LOG_ERR, "Sysctl HW_IOSTATS failed.");
+    }
+
+    /*
+     * Iterate through the structure, disk by disk and print out
+     * metrics.
+     */
+    int ndisks;
+    ndisks = size / sizeof(struct io_sysctl);
+    for (i = 0; i < ndisks; i++) {
+        print_disk_io_metric(disks[i].name, disks[i].rbytes, disks[i].wbytes);
+    }
+    free(disks);
+    
 
     closelog();
     return 0;
