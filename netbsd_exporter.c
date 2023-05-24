@@ -73,61 +73,54 @@ void print_memory_metric(const char* metric, long value) {
     printf("os_memory_%s_bytes %ld\n", metric, value);
 }
 
-int main() {
-    int mib[3];
-    size_t size;
-    int i;
-
-
-    openlog("netbsd_exporter", LOG_PID, LOG_USER);
-    syslog(LOG_INFO, "Das Programm wurde aufgerufen.");
-
-    printf("HTTP/1.1 200 OK\r\n");
-    printf("Content-Type: text/plain\r\n\r\n");
-
-
-    // Disk Space Metrics
+void retrieve_disk_space_metrics() {
     struct statvfs* fsinfo;
     int numfs;
+    int i;
 
     numfs = getmntinfo(&fsinfo, MNT_WAIT);
     if (numfs == -1) {
-        syslog(LOG_ERR, "getmntinfo failed");
-        return 1;
+        syslog(LOG_ERR, "Could not determine mounted filesystems.");
+        return;
     }
 
     for (i = 0; i < numfs; i++) {
-	// Include only FFS filesystems in metrics
-	if(strcmp(fsinfo[i].f_fstypename,"ffs") != 0) {
-	    continue;
+        // Include only FFS filesystems in metrics
+        if (strcmp(fsinfo[i].f_fstypename, "ffs") != 0) {
+            continue;
         }
-	char *token;
-	token = strtok(fsinfo[i].f_mntfromname,"/");
-        if(token != NULL) { 
-            token = strtok(NULL, "/");
-	}
 
-	if(token == NULL) {
-	    syslog(LOG_ERR, "parsing dev failed");
-	    continue;
+        char* token;
+        token = strtok(fsinfo[i].f_mntfromname, "/");
+        if (token != NULL) {
+            token = strtok(NULL, "/");
+        }
+
+        if (token == NULL) {
+            syslog(LOG_ERR, "parsing dev failed");
+            continue;
         }
         print_filesystem_metric("size", token, fsinfo[i].f_mntonname, fsinfo[i].f_blocks * fsinfo[i].f_frsize);
         print_filesystem_metric("used", token, fsinfo[i].f_mntonname, (fsinfo[i].f_blocks - fsinfo[i].f_bfree) * fsinfo[i].f_frsize);
         print_filesystem_metric("free", token, fsinfo[i].f_mntonname, fsinfo[i].f_bavail * fsinfo[i].f_frsize);
     }
+}
 
-    // CPU Load Metrics
+void retrieve_cpu_load_metrics() {
     double loadavg[3];
-    if(getloadavg(loadavg,3) != -1) {
+
+    if (getloadavg(loadavg, 3) != -1) {
         print_load_metric("1", loadavg[0]);
         print_load_metric("5", loadavg[1]);
         print_load_metric("15", loadavg[2]);
     } else {
         syslog(LOG_ERR, "loadavg failed.");
     }
+}
 
-    // Network Card Metrics
-    struct ifaddrs* ifap, *ifa;
+void retrieve_network_card_metrics() {
+    struct ifaddrs* ifap, * ifa;
+
     if (getifaddrs(&ifap) == 0) {
         for (ifa = ifap; ifa != NULL; ifa = ifa->ifa_next) {
             if (ifa->ifa_addr == NULL || !(ifa->ifa_flags & IFF_UP))
@@ -140,21 +133,23 @@ int main() {
         }
         freeifaddrs(ifap);
     } else {
-        syslog(LOG_ERR, "Fehler beim Abrufen der Netzwerkstatistiken.");
+        syslog(LOG_ERR, "Could not get network interfaces.");
     }
+}
 
-    // Memory Metrics
+void retrieve_memory_metrics() {
     int pagesize;
     struct uvmexp_sysctl u;
 
     // getpagesize() is obsolete, see manpage
     pagesize = sysconf(_SC_PAGESIZE);
+    int mib[2];
+    size_t size = sizeof(struct uvmexp_sysctl);
     mib[0] = CTL_VM;
     mib[1] = VM_UVMEXP2;
-    size = sizeof(struct uvmexp_sysctl);
     if (sysctl(mib, 2, &u, &size, NULL, 0) == -1) {
-        syslog(LOG_ERR, "sysctl failed."); 
-        return 1;	
+        syslog(LOG_ERR, "sysctl failed.");
+        return;
     }
     print_memory_metric("size", u.npages * pagesize);
     print_memory_metric("free", u.free * pagesize);
@@ -164,47 +159,55 @@ int main() {
     print_memory_metric("wired", u.wired * pagesize);
     print_memory_metric("swap_size", u.swpages * pagesize);
     print_memory_metric("swap_used", u.swpginuse * pagesize);
+}
 
-    /*
-     * Call sysctl to determine the size of the expected structure and
-     * allocate a suitable sized buffer.
-     */
+void retrieve_disk_io_metrics() {
+    int mib[3];
+    size_t size;
+    struct io_sysctl* disks;
+
     mib[0] = CTL_HW;
     mib[1] = HW_IOSTATS;
     mib[2] = sizeof(struct io_sysctl);
-    if (sysctl(mib,3 , NULL, &size, NULL, 0) == -1) {
-        syslog(LOG_ERR, "Sysctl HW_IOSTATS failed."); 
-        return 1;	
+
+    // Call sysctl to determine the size of the expected structure and allocate a suitable sized buffer.
+    if (sysctl(mib, 3, NULL, &size, NULL, 0) == -1) {
+        syslog(LOG_ERR, "Sysctl HW_IOSTATS failed.");
+        return;
     }
-    struct io_sysctl *disks = NULL;
-    disks = (struct io_sysctl *)malloc(size);
+
+    disks = (struct io_sysctl*)malloc(size);
     if (disks == NULL) {
-        syslog(LOG_ERR,"Memory allocation failure.");
-        exit(1);
+        syslog(LOG_ERR, "Memory allocation failed.");
+        return;
     }
 
-    /*
-     * Call sysctl once again, this time with the buffer to fetch the
-     * actual iostats data.
-     */
-    mib[0] = CTL_HW;
-    mib[1] = HW_IOSTATS;
-    mib[2] = sizeof(struct io_sysctl);
+    // Call sysctl once again, this time with the buffer to fetch the actual iostats data.
     if (sysctl(mib, 3, disks, &size, NULL, 0) == -1) {
         syslog(LOG_ERR, "Sysctl HW_IOSTATS failed.");
     }
 
-    /*
-     * Iterate through the structure, disk by disk and print out
-     * metrics.
-     */
+    // Iterate through the structure, disk by disk and print out metrics.
     int ndisks;
     ndisks = size / sizeof(struct io_sysctl);
-    for (i = 0; i < ndisks; i++) {
+    for (int i = 0; i < ndisks; i++) {
         print_disk_io_metric(disks[i].name, disks[i].rbytes, disks[i].wbytes);
     }
     free(disks);
-    
+}
+
+int main() {
+    openlog("netbsd_exporter", LOG_PID, LOG_USER);
+    syslog(LOG_DEBUG, "Program started.");
+
+    printf("HTTP/1.1 200 OK\r\n");
+    printf("Content-Type: text/plain\r\n\r\n");
+
+    retrieve_disk_space_metrics();
+    retrieve_cpu_load_metrics();
+    retrieve_network_card_metrics();
+    retrieve_memory_metrics();
+    retrieve_disk_io_metrics();
 
     closelog();
     return 0;
