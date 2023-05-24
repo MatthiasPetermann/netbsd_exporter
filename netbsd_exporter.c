@@ -51,26 +51,26 @@
 #include <uvm/uvm_extern.h>
 
 void print_filesystem_metric(const char* metric, const char* device, const char* mountpoint, long value) {
-    printf("os_filesystem_%s_bytes{device=\"%s\",mountpoint=\"%s\"} %ld\n", metric, device, mountpoint, value);
+    printf("netbsd_filesystem_%s_bytes{device=\"%s\",mountpoint=\"%s\"} %ld\n", metric, device, mountpoint, value);
 }
 
 void print_disk_io_metric(const char* device, long long unsigned int rbytes, long long unsigned int wbytes) {
-    printf("os_disk_read_bytes{device=\"%s\"} %llu\n", device, rbytes);
-    printf("os_disk_write_bytes{device=\"%s\"} %llu\n", device, wbytes);
+    printf("netbsd_disk_read_bytes{device=\"%s\"} %llu\n", device, rbytes);
+    printf("netbsd_disk_write_bytes{device=\"%s\"} %llu\n", device, wbytes);
 }
 
 void print_load_metric(const char* metric, double value) {
-    printf("os_load%s %lf\n", metric, value);
+    printf("netbsd_load%s %lf\n", metric, value);
 }
 
 void print_network_metric(const char* interface, unsigned long long rxbytes, unsigned long long txbytes, unsigned long long errors) {
-    printf("os_network_rx_bytes{interface=\"%s\"} %llu\n", interface, rxbytes);
-    printf("os_network_tx_bytes{interface=\"%s\"} %llu\n", interface, txbytes);
-    printf("os_network_errors{interface=\"%s\"} %llu\n", interface, errors);
+    printf("netbsd_network_rx_bytes{interface=\"%s\"} %llu\n", interface, rxbytes);
+    printf("netbsd_network_tx_bytes{interface=\"%s\"} %llu\n", interface, txbytes);
+    printf("netbsd_network_errors{interface=\"%s\"} %llu\n", interface, errors);
 }
 
 void print_memory_metric(const char* metric, long value) {
-    printf("os_memory_%s_bytes %ld\n", metric, value);
+    printf("netbsd_memory_%s_bytes %ld\n", metric, value);
 }
 
 void retrieve_disk_space_metrics() {
