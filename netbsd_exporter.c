@@ -196,12 +196,39 @@ void retrieve_disk_io_metrics() {
     free(disks);
 }
 
-int main() {
+void print_help(char *program_name) {
+    printf("Usage: %s [OPTIONS]\n",program_name);
+    printf("Options:\n");
+    printf("  --help                Show help message\n");
+    printf("  --no-http-header      Disable HTTP header in output\n");
+}
+
+int main(int argc, char *argv[]) {
+    int show_http_header = 1;  
+
+    /*
+     * Check command line arguments
+     */
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "--help") == 0) {
+            print_help(argv[0]);
+            return 0;
+        } else if (strcmp(argv[i], "--no-http-header") == 0) {
+            show_http_header = 0;
+        } else {
+            printf("Unrecognized option: %s\n", argv[i]);
+            return 1;
+        }
+    }
+
     openlog("netbsd_exporter", LOG_PID, LOG_USER);
     syslog(LOG_DEBUG, "Program started.");
 
-    printf("HTTP/1.1 200 OK\r\n");
-    printf("Content-Type: text/plain\r\n\r\n");
+    // HTTP-Header anzeigen, wenn show_http_header auf 1 gesetzt ist
+    if (show_http_header) {
+        printf("HTTP/1.1 200 OK\r\n");
+        printf("Content-Type: text/plain\r\n\r\n");
+    }
 
     retrieve_disk_space_metrics();
     retrieve_cpu_load_metrics();
