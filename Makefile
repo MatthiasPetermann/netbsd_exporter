@@ -4,7 +4,7 @@ TARGET=netbsd_exporter
 PACKAGE=$(TARGET).tar.gz
 REMOTE_HOST=192.168.2.50
 REMOTE_USER=user
-REMOTE_DIR=/home/user/
+REMOTE_DIR=/home/user/patches
 
 all: $(TARGET)
 
