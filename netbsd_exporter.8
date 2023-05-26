@@ -10,7 +10,7 @@
 .Sh SYNOPSIS
 .Nm netbsd_exporter
 .Op Fl \\-no-http-header
-.Op Fl \\-syslog
+.Op Fl \\-no-syslog
 .Sh DESCRIPTION
 .Nm
 is a Prometheus compatible exporter for system metrics such as disk I/O,
@@ -26,8 +26,8 @@ The following options are available:
 .Bl -tag -width indent
 .It Fl \\-no-http-header
 Disable HTTP header in output
-.It Fl \\-syslog
-Send diagnostic output and error messages to syslog instead of stderr.
+.It Fl \\--no-syslog
+Send diagnostic output and error messages to stderr instead of syslog.
 .El
 .\" The following commands should be uncommented and
 .\" used where appropriate.

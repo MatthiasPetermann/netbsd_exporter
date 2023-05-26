@@ -199,7 +199,7 @@ void retrieve_disk_io_metrics() {
 }
 
 void log_message(int priority, const char* message) {
-    if (use_syslog) {
+    if (!no_syslog) {
         syslog(priority, "%s", message);
     } else {
         fprintf(stderr, "%s\n", message);
@@ -211,7 +211,7 @@ void print_help() {
     printf("Options:\n");
     printf("  --help              Display this help message\n");
     printf("  --no-http-header    Disable HTTP headers\n");
-    printf("  --syslog            Log messages using syslog\n");
+    printf("  --no-syslog         Disable logging messages using syslog\n");
 }
 
 int main(int argc, char *argv[]) {
@@ -219,7 +219,7 @@ int main(int argc, char *argv[]) {
     struct option long_options[] = {
         {"help", no_argument, NULL, 'h'},
         {"no-http-header", no_argument, NULL, 1},
-        {"syslog", no_argument, NULL, 2},
+        {"no-syslog", no_argument, NULL, 2},
         {NULL, 0, NULL, 0}
     };
 
@@ -233,7 +233,7 @@ int main(int argc, char *argv[]) {
                 no_http_header = 1;
                 break;
             case 2:
-                use_syslog = 1;
+                no_syslog = 1;
                 break;
             case '?':
                 fprintf(stderr, "Unknown option: %s\n", argv[optind - 1]);
@@ -243,7 +243,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    if (use_syslog) {
+    if (!no_syslog) {
         openlog(program_name, LOG_PID, LOG_USER);
     }
 
@@ -260,7 +260,7 @@ int main(int argc, char *argv[]) {
 
     log_message(LOG_INFO,"Programm completed.");
 
-    if(use_syslog) {
+    if(!no_syslog) {
         closelog();
     }
     return 0;
