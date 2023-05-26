@@ -24,7 +24,7 @@
  * SUCH DAMAGE.
  */
 
-/* 
+/*
  * This program retrieves system metrics such as disk I/O, network I/O,
  * RAM and filesystem usage, as well as CPU load from the running system
  * and exposes them in the format of Prometheus metrics. It is designed
@@ -49,6 +49,8 @@
 #include <syslog.h>
 #include <unistd.h>
 #include <uvm/uvm_extern.h>
+#include <getopt.h>
+#include "netbsd_exporter.h"
 
 void print_filesystem_metric(const char* metric, const char* device, const char* mountpoint, long value) {
     printf("netbsd_filesystem_%s_bytes{device=\"%s\",mountpoint=\"%s\"} %ld\n", metric, device, mountpoint, value);
@@ -80,7 +82,7 @@ void retrieve_disk_space_metrics() {
 
     numfs = getmntinfo(&fsinfo, MNT_WAIT);
     if (numfs == -1) {
-        syslog(LOG_ERR, "Could not determine mounted filesystems.");
+        log_message(LOG_ERR, "Could not determine mounted filesystems.");
         return;
     }
 
@@ -97,7 +99,7 @@ void retrieve_disk_space_metrics() {
         }
 
         if (token == NULL) {
-            syslog(LOG_ERR, "parsing dev failed");
+            log_message(LOG_ERR, "parsing dev failed");
             continue;
         }
         print_filesystem_metric("size", token, fsinfo[i].f_mntonname, fsinfo[i].f_blocks * fsinfo[i].f_frsize);
@@ -114,7 +116,7 @@ void retrieve_cpu_load_metrics() {
         print_load_metric("5", loadavg[1]);
         print_load_metric("15", loadavg[2]);
     } else {
-        syslog(LOG_ERR, "loadavg failed.");
+        log_message(LOG_ERR, "loadavg failed.");
     }
 }
 
@@ -133,7 +135,7 @@ void retrieve_network_card_metrics() {
         }
         freeifaddrs(ifap);
     } else {
-        syslog(LOG_ERR, "Could not get network interfaces.");
+        log_message(LOG_ERR, "Could not get network interfaces.");
     }
 }
 
@@ -148,7 +150,7 @@ void retrieve_memory_metrics() {
     mib[0] = CTL_VM;
     mib[1] = VM_UVMEXP2;
     if (sysctl(mib, 2, &u, &size, NULL, 0) == -1) {
-        syslog(LOG_ERR, "sysctl failed.");
+        log_message(LOG_ERR, "sysctl failed.");
         return;
     }
     print_memory_metric("size", u.npages * pagesize);
@@ -172,19 +174,19 @@ void retrieve_disk_io_metrics() {
 
     // Call sysctl to determine the size of the expected structure and allocate a suitable sized buffer.
     if (sysctl(mib, 3, NULL, &size, NULL, 0) == -1) {
-        syslog(LOG_ERR, "Sysctl HW_IOSTATS failed.");
+        log_message(LOG_ERR, "Sysctl HW_IOSTATS failed.");
         return;
     }
 
     disks = (struct io_sysctl*)malloc(size);
     if (disks == NULL) {
-        syslog(LOG_ERR, "Memory allocation failed.");
+        log_message(LOG_ERR, "Memory allocation failed.");
         return;
     }
 
     // Call sysctl once again, this time with the buffer to fetch the actual iostats data.
     if (sysctl(mib, 3, disks, &size, NULL, 0) == -1) {
-        syslog(LOG_ERR, "Sysctl HW_IOSTATS failed.");
+        log_message(LOG_ERR, "Sysctl HW_IOSTATS failed.");
     }
 
     // Iterate through the structure, disk by disk and print out metrics.
@@ -196,36 +198,56 @@ void retrieve_disk_io_metrics() {
     free(disks);
 }
 
-void print_help(char *program_name) {
-    printf("Usage: %s [OPTIONS]\n",program_name);
+void log_message(int priority, const char* message) {
+    if (use_syslog) {
+        syslog(priority, "%s", message);
+    } else {
+        fprintf(stderr, "%s\n", message);
+    }
+}
+
+void print_help() {
+    printf("Usage: program [OPTIONS]\n");
     printf("Options:\n");
-    printf("  --help                Show help message\n");
-    printf("  --no-http-header      Suppress HTTP header in output\n");
+    printf("  --help              Display this help message\n");
+    printf("  --no-http-header    Disable HTTP headers\n");
+    printf("  --syslog            Log messages using syslog\n");
 }
 
 int main(int argc, char *argv[]) {
-    int show_http_header = 1;  
 
-    /*
-     * Check command line arguments
-     */
-    for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "--help") == 0) {
-            print_help(argv[0]);
-            return 0;
-        } else if (strcmp(argv[i], "--no-http-header") == 0) {
-            show_http_header = 0;
-        } else {
-            printf("Unrecognized option: %s\n", argv[i]);
-            return 1;
+    struct option long_options[] = {
+        {"help", no_argument, NULL, 'h'},
+        {"no-http-header", no_argument, NULL, 1},
+        {"syslog", no_argument, NULL, 2},
+        {NULL, 0, NULL, 0}
+    };
+
+    int option;
+    while ((option = getopt_long(argc, argv, "h", long_options, NULL)) != -1) {
+        switch (option) {
+            case 'h':
+                print_help();
+                return 0;
+            case 1:
+                no_http_header = 1;
+                break;
+            case 2:
+                use_syslog = 1;
+                break;
+            case '?':
+                fprintf(stderr, "Unknown option: %s\n", argv[optind - 1]);
+                return 1;
+            default:
+                break;
         }
     }
 
-    openlog("netbsd_exporter", LOG_PID, LOG_USER);
-    syslog(LOG_DEBUG, "Program started.");
+    if (use_syslog) {
+        openlog(program_name, LOG_PID, LOG_USER);
+    }
 
-    // HTTP-Header anzeigen, wenn show_http_header auf 1 gesetzt ist
-    if (show_http_header) {
+    if (!no_http_header) {
         printf("HTTP/1.1 200 OK\r\n");
         printf("Content-Type: text/plain\r\n\r\n");
     }
@@ -236,6 +258,10 @@ int main(int argc, char *argv[]) {
     retrieve_memory_metrics();
     retrieve_disk_io_metrics();
 
-    closelog();
+    log_message(LOG_INFO,"Programm completed.");
+
+    if(use_syslog) {
+        closelog();
+    }
     return 0;
 }
