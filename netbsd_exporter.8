@@ -1,0 +1,66 @@
+.\" The following commands are required for all man pages.
+.Dd May 26, 2023
+.Dt NETBSD_EXPORTER 8
+.Os 
+.Sh NAME
+.Nm netbsd_exporter
+.Nd system metrics exporter for Prometheus
+.\" This next command is for sections 2 and 3 only.
+.\" .Sh LIBRARY
+.Sh SYNOPSIS
+.Nm netbsd_exporter
+.Op Fl \\-no-http-header
+.Op Fl \\-syslog Ar pri
+.Sh DESCRIPTION
+.Nm
+is a Prometheus compatible exporter for system metrics such as disk I/O,
+network I/O, RAM and filesystem usage, as well as CPU load. It is designed
+to be lightweight and NetBSD-focused.
+.Pp
+.Nm
+can be served by inetd to allow Prometheus to scrape the metrics with the
+same interface as the node_exporter provides. Hence by default, metrics are
+printed out to stdout with a minimal HTTP header preceded. 
+.Pp
+The following options are available:
+.Bl -tag -width indent
+.It Fl \\-no-http-header
+Suppress HTTP header in output
+.It Fl \\-syslog Ar pri
+Send diagnostic output and error messages to syslog instead of stderr
+using pri as the priority.
+.El
+.\" The following commands should be uncommented and
+.\" used where appropriate.
+.\" .Sh IMPLEMENTATION NOTES
+.\" This next command is for sections 2, 3 and 9 function
+.\" return values only.
+.\" .Sh RETURN VALUES
+.\" This next command is for sections 1, 6, 7 and 8 only.
+.\" .Sh ENVIRONMENT
+.\" .Sh FILES
+.\" .Sh EXAMPLES
+.Sh EXIT STATUS
+The
+.Nm
+exits 0 on success, and >0 if an error occurs.
+.\" This next command is for sections 1, 6, 7, 8 and 9 only
+.\"     (command return values (to shell) and
+.\"     fprintf/stderr type diagnostics).
+.\" .Sh DIAGNOSTICS
+.\" .Sh COMPATIBILITY
+.\" This next command is for sections 2, 3 and 9 error
+.\"     and signal handling only.
+.\" .Sh ERRORS
+.\" .Sh SEE ALSO
+.\" .Sh STANDARDS
+.\" .Sh HISTORY
+.Sh AUTHORS
+.Nm
+was written by
+.An Matthias Petermann
+.Aq mp@petermann-it.de .
+.Sh BUGS
+.Nm
+currently does not parse stdin. This means that it outputs metrics
+independently of the received HTTP request verb and URL via inetd.

@@ -200,7 +200,7 @@ void print_help(char *program_name) {
     printf("Usage: %s [OPTIONS]\n",program_name);
     printf("Options:\n");
     printf("  --help                Show help message\n");
-    printf("  --no-http-header      Disable HTTP header in output\n");
+    printf("  --no-http-header      Suppress HTTP header in output\n");
 }
 
 int main(int argc, char *argv[]) {
