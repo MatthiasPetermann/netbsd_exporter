@@ -120,7 +120,7 @@ void retrieve_cpu_load_metrics() {
     }
 }
 
-void retrieve_network_card_metrics() {
+void retrieve_network_interface_metrics() {
     struct ifaddrs* ifap, * ifa;
 
     if (getifaddrs(&ifap) == 0) {
@@ -254,7 +254,7 @@ int main(int argc, char *argv[]) {
 
     retrieve_disk_space_metrics();
     retrieve_cpu_load_metrics();
-    retrieve_network_card_metrics();
+    retrieve_network_interface_metrics();
     retrieve_memory_metrics();
     retrieve_disk_io_metrics();
 
