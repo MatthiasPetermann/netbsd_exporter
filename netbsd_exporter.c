@@ -207,7 +207,7 @@ void log_message(int priority, const char* message) {
 }
 
 void print_help() {
-    printf("Usage: program [OPTIONS]\n");
+    printf("Usage: %s [OPTIONS]\n", program_name);
     printf("Options:\n");
     printf("  --help              Display this help message\n");
     printf("  --no-http-header    Disable HTTP headers\n");
