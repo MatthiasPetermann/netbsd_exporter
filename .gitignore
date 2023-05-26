@@ -1,1 +1,3 @@
 netbsd_exporter
+dist
+*.tar.gz
