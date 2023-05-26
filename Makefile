@@ -1,7 +1,8 @@
 CC=cc
 CFLAGS=-Wall -Wextra
 TARGET=netbsd_exporter
-PACKAGE=$(TARGET).tar.gz
+VERSION=`git describe --tags`
+PACKAGE=$(TARGET)-$(VERSION).tar.gz
 REMOTE_HOST=192.168.2.50
 REMOTE_USER=user
 REMOTE_DIR=/home/user/patches
