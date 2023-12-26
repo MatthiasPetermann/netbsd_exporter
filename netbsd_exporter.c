@@ -52,7 +52,11 @@
 #include <getopt.h>
 #include "netbsd_exporter.h"
 
-#ifndef VERSION
+#define STRINGIFY(x) #x
+#define STR(x) STRINGIFY(x)
+#define IS_EMPTY(x) (STR(x)[0] == '\0')
+
+#if IS_EMPTY(VERSION)
 #define VERSION "current"
 #endif
 
