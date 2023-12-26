@@ -215,7 +215,7 @@ void print_help() {
     printf("  --version           Print the version information\n");
 }
 
-void version() {
+void print_version() {
     printf("%s Version %s\n", program_name, VERSION);    
 }
 
