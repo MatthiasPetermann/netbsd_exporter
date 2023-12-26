@@ -52,6 +52,10 @@
 #include <getopt.h>
 #include "netbsd_exporter.h"
 
+#ifndef VERSION
+#define VERSION "current"
+#endif
+
 void print_filesystem_metric(const char* metric, const char* device, const char* mountpoint, long value) {
     printf("netbsd_fs_%s_bytes{device=\"%s\",mountpoint=\"%s\"} %ld\n", metric, device, mountpoint, value);
 }
@@ -216,7 +220,7 @@ void print_help() {
 }
 
 void print_version() {
-    printf("%s Version %s\n", program_name, VERSION);    
+    printf("%s  version %s\n", program_name, VERSION);    
 }
 
 int main(int argc, char *argv[]) {
