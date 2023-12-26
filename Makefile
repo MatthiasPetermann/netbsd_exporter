@@ -1,14 +1,14 @@
 CC=cc
 CFLAGS=-Wall -Wextra
 TARGET=netbsd_exporter
-VERSION=`git describe --tags --exact-match 2>/dev/null || echo snapshot`
+VERSION=`git describe --tags --exact-match 2>/dev/null || echo current`
 
 PACKAGE=$(TARGET)-$(VERSION).tar.gz
 
 all: $(TARGET)
 
 $(TARGET): netbsd_exporter.c
-	$(CC) $(CFLAGS) -DVERSION=$(VERSION) -o $@ $<
+	$(CC) $(CFLAGS) -DVERSION=\"$(VERSION)\" -o $@ $<
 
 clean:
 	rm -f $(TARGET)
