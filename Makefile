@@ -1,7 +1,7 @@
 CC=cc
 CFLAGS=-Wall -Wextra
 TARGET=netbsd_exporter
-VERSION=`git describe --tags --exact-match 2>/dev/null || echo current`
+VERSION=0.9.1
 
 PACKAGE=$(TARGET)-$(VERSION).tar.gz
 
