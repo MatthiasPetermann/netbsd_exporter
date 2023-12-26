@@ -212,6 +212,11 @@ void print_help() {
     printf("  --help              Display this help message\n");
     printf("  --no-http-header    Disable HTTP headers\n");
     printf("  --no-syslog         Disable logging messages using syslog\n");
+    printf("  --version           Print the version information\n");
+}
+
+void version() {
+    printf("%s Version %s\n", program_name, VERSION);    
 }
 
 int main(int argc, char *argv[]) {
@@ -220,6 +225,7 @@ int main(int argc, char *argv[]) {
         {"help", no_argument, NULL, 'h'},
         {"no-http-header", no_argument, NULL, 1},
         {"no-syslog", no_argument, NULL, 2},
+        {"version", no_argument, NULL, 3},
         {NULL, 0, NULL, 0}
     };
 
@@ -235,6 +241,9 @@ int main(int argc, char *argv[]) {
             case 2:
                 no_syslog = 1;
                 break;
+            case 3:
+                print_version();
+                return 0;
             case '?':
                 fprintf(stderr, "Unknown option: %s\n", argv[optind - 1]);
                 return 1;

@@ -7,7 +7,7 @@ PACKAGE=$(TARGET)-$(VERSION).tar.gz
 all: $(TARGET)
 
 $(TARGET): netbsd_exporter.c
-	$(CC) $(CFLAGS) -o $@ $<
+	$(CC) $(CFLAGS) -DVERSION=$(VERSION) -o $@ $<
 
 clean:
 	rm -f $(TARGET)
