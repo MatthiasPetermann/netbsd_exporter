@@ -52,14 +52,6 @@
 #include <getopt.h>
 #include "netbsd_exporter.h"
 
-#define STRINGIFY(x) #x
-#define STR(x) STRINGIFY(x)
-#define IS_EMPTY(x) (STR(x)[0] == '\0')
-
-#if IS_EMPTY(VERSION)
-#define VERSION "current"
-#endif
-
 void print_filesystem_metric(const char* metric, const char* device, const char* mountpoint, long value) {
     printf("netbsd_fs_%s_bytes{device=\"%s\",mountpoint=\"%s\"} %ld\n", metric, device, mountpoint, value);
 }
