@@ -3,9 +3,6 @@ CFLAGS=-Wall -Wextra
 TARGET=netbsd_exporter
 VERSION=`git describe --tags`
 PACKAGE=$(TARGET)-$(VERSION).tar.gz
-REMOTE_HOST=192.168.2.50
-REMOTE_USER=user
-REMOTE_DIR=/home/user/patches
 
 all: $(TARGET)
 
@@ -23,7 +20,8 @@ dist:	$(TARGET)
 	cp $(TARGET).8 dist/usr/share/man/man8
 	(cd dist;tar -cvf ../$(PACKAGE) .)
 
-deploy: dist
-	scp $(PACKAGE) $(REMOTE_USER)@$(REMOTE_HOST):$(REMOTE_DIR)
+install: $(TARGET)
+	cp $(TARGET) /usr/libexec
+	cp $(TARGET).8 /usr/share/man/man8
 
-.PHONY: all clean deploy
+.PHONY: all clean install
