@@ -1,7 +1,7 @@
 CC=cc
 CFLAGS=-Wall -Wextra
 TARGET=netbsd_exporter
-VERSION=0.9.1
+VERSION=0.9.2
 
 PACKAGE=$(TARGET)-$(VERSION).tar.gz
 
