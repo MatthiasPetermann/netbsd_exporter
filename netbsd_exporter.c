@@ -211,7 +211,7 @@ void print_help() {
     printf("Options:\n");
     printf("  --help              Display this help message\n");
     printf("  --no-http-header    Disable HTTP headers\n");
-    printf("  --no-syslog         Disable logging messages using syslog\n");
+    printf("  --syslog            Enable logging messages using syslog\n");
     printf("  --version           Print the version information\n");
 }
 
@@ -224,7 +224,7 @@ int main(int argc, char *argv[]) {
     struct option long_options[] = {
         {"help", no_argument, NULL, 'h'},
         {"no-http-header", no_argument, NULL, 1},
-        {"no-syslog", no_argument, NULL, 2},
+        {"syslog", no_argument, NULL, 2},
         {"version", no_argument, NULL, 3},
         {NULL, 0, NULL, 0}
     };
@@ -236,10 +236,10 @@ int main(int argc, char *argv[]) {
                 print_help();
                 return 0;
             case 1:
-                no_http_header = 1;
+                option_http_header = 0;
                 break;
             case 2:
-                no_syslog = 1;
+                option_syslog = 1;
                 break;
             case 3:
                 print_version();
@@ -252,11 +252,11 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    if (!no_syslog) {
+    if (option_syslog) {
         openlog(program_name, LOG_PID, LOG_USER);
     }
 
-    if (!no_http_header) {
+    if (option_http_header) {
         printf("HTTP/1.1 200 OK\r\n");
         printf("Content-Type: text/plain\r\n\r\n");
     }
