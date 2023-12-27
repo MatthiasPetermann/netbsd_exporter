@@ -267,8 +267,6 @@ int main(int argc, char *argv[]) {
     retrieve_memory_metrics();
     retrieve_disk_io_metrics();
 
-    log_message(LOG_INFO,"Programm completed.");
-
     if(option_syslog) {
         closelog();
     }
