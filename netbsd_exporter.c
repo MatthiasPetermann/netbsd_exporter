@@ -199,7 +199,7 @@ void retrieve_disk_io_metrics() {
 }
 
 void log_message(int priority, const char* message) {
-    if (!no_syslog) {
+    if (option_syslog) {
         syslog(priority, "%s", message);
     } else {
         fprintf(stderr, "%s\n", message);
@@ -269,7 +269,7 @@ int main(int argc, char *argv[]) {
 
     log_message(LOG_INFO,"Programm completed.");
 
-    if(!no_syslog) {
+    if(option_syslog) {
         closelog();
     }
     return 0;
