@@ -29,7 +29,7 @@
 const char *program_name = "netbsd_exporter";
 
 int option_http_header = 1;
-int option_syslog = 0;
+int option_syslog = 1;
 
 void print_filesystem_metric(const char*, const char*, const char*, long );
 

@@ -7,7 +7,7 @@
 .Sh SYNOPSIS
 .Nm netbsd_exporter
 .Op Fl Fl no-http-header
-.Op Fl Fl syslog
+.Op Fl Fl no-syslog
 .Op Fl Fl version
 .Sh DESCRIPTION
 .Nm
@@ -28,10 +28,9 @@ The following options are available:
 .Bl -tag -width indent
 .It Fl Fl no-http-header
 Disable HTTP header in output
-.It Fl Fl syslog
-Send diagnostic output and error messages to 
-.Xr syslogd 8
-instead of stderr.
+.It Fl Fl no-syslog
+Send diagnostic output and error messages to stderr instead of
+.Xr syslogd 8 . 
 .It Fl Fl version
 Print the version information
 .El
