@@ -51,6 +51,7 @@
 #include <uvm/uvm_extern.h>
 #include <getopt.h>
 #include "netbsd_exporter.h"
+#include "version.h"
 
 void print_filesystem_metric(const char* metric, const char* device, const char* mountpoint, long value) {
     printf("netbsd_fs_%s_bytes{device=\"%s\",mountpoint=\"%s\"} %ld\n", metric, device, mountpoint, value);
@@ -216,7 +217,8 @@ void print_help() {
 }
 
 void print_version() {
-    printf("%s  version %s\n", program_name, VERSION);    
+    printf("%s  version %d.%d.%d\n", program_name, MAJOR_VERSION,
+        MINOR_VERSION, PATCH_VERSION );
 }
 
 int main(int argc, char *argv[]) {

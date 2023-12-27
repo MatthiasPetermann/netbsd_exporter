@@ -1,14 +1,13 @@
 CC=cc
 CFLAGS=-Wall -Wextra
 TARGET=netbsd_exporter
-VERSION=0.9.2
 
 PACKAGE=$(TARGET)-$(VERSION).tar.gz
 
 all: $(TARGET)
 
 $(TARGET): netbsd_exporter.c
-	$(CC) $(CFLAGS) -DVERSION=\"$(VERSION)\" -o $@ $<
+	$(CC) $(CFLAGS) -o $@ $<
 
 clean:
 	rm -f $(TARGET)
