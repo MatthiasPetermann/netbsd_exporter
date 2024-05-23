@@ -31,13 +31,13 @@ const char *program_name = "netbsd_exporter";
 int option_http_header = 1;
 int option_syslog = 1;
 
-void print_filesystem_metric(const char*, const char*, const char*, long );
+void print_filesystem_metric(const char*, const char*, const char*, unsigned long long);
 
-void print_disk_io_metric(const char*, long long unsigned int, long long unsigned int );
+void print_disk_io_metric(const char*, unsigned long long, unsigned long long);
 
 void print_load_metric(const char*, double );
 
-void print_network_metric(const char*, unsigned long long, unsigned long long, unsigned long long );
+void print_network_metric(const char*, unsigned long long, unsigned long long, unsigned long long);
 
 void print_memory_metric(const char*, long );
 

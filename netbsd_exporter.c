@@ -53,11 +53,11 @@
 #include "netbsd_exporter.h"
 #include "version.h"
 
-void print_filesystem_metric(const char* metric, const char* device, const char* mountpoint, long value) {
-    printf("netbsd_fs_%s_bytes{device=\"%s\",mountpoint=\"%s\"} %ld\n", metric, device, mountpoint, value);
+void print_filesystem_metric(const char* metric, const char* device, const char* mountpoint, unsigned long long value) {
+    printf("netbsd_fs_%s_bytes{device=\"%s\",mountpoint=\"%s\"} %llu\n", metric, device, mountpoint, value);
 }
 
-void print_disk_io_metric(const char* device, long long unsigned int rbytes, long long unsigned int wbytes) {
+void print_disk_io_metric(const char* device, unsigned long long rbytes, unsigned long long wbytes) {
     printf("netbsd_dk_read_bytes{device=\"%s\"} %llu\n", device, rbytes);
     printf("netbsd_dk_write_bytes{device=\"%s\"} %llu\n", device, wbytes);
 }
